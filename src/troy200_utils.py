@@ -5,6 +5,14 @@ from builtins import range
 
 from fonduer.learning.utils import confusion_matrix
 from fonduer.supervision.models import GoldLabel, GoldLabelKey
+from fonduer.utils.utils_table import (
+    is_row_aligned, 
+    is_col_aligned 
+)
+from fonduer.utils.data_model_utils.visual import (
+    is_horz_aligned,
+    is_vert_aligned
+)
 from fonduer.candidates.models import Candidate 
 from IPython.display import display, clear_output
 from pprint import pprint

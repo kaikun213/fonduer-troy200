@@ -4,6 +4,16 @@
 This project uses [Fonduer](https://github.com/HazyResearch/fonduer) to extract information from spreadsheets.
 It aims to extract the data values and corresponding row/column headers from the [TROY200](https://data.mendeley.com/datasets/ydcr7mcrtp/6) data set.
 
+## Structure
+The project contains 3 different experiments:
+- Fonduer without cell annotations
+- Fonduer with cell annotations (gold data)
+- Fonduer with cell annotations (predictions)
+
+The data folder contains the spreadsheet which have the annotations indicated by the fonts. 
+The gold standard is in data/troy200_gold.csv , and the spreadsheets with gold-annotations/predictions in gold/predictions, respectively.
+The data folder needs to be extracted first, in order to run the experiments.
+
 ## Installation
 
 Clone the repository and execute inside the folder.
