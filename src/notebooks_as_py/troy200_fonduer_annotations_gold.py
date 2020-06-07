@@ -526,16 +526,18 @@ from fonduer.supervision import Labeler
 from troy200_utils import get_gold_func
 
 # 1.1) Load the gold data rows
-gold = get_gold_func(gold_file, row_on=True, col_on=False)
+gold_row = get_gold_func(gold_file, row_on=True, col_on=False)
 docs = corpus_parser.get_documents()
 labeler = Labeler(session, [RowCandidate])
-get_ipython().run_line_magic('time', 'labeler.apply(docs=docs, lfs=[[gold]], table=GoldLabel, train=True, parallelism=PARALLEL)')
+get_ipython().run_line_magic('time', 'labeler.apply(docs=docs, lfs=[[gold_row]], table=GoldLabel, train=True, parallelism=PARALLEL)')
 
 # 1.2) Load the gold data cols
-gold = get_gold_func(gold_file, row_on=False, col_on=True)
+gold_col = get_gold_func(gold_file, row_on=False, col_on=True)
 docs = corpus_parser.get_documents()
 labeler = Labeler(session, [ColCandidate])
-get_ipython().run_line_magic('time', 'labeler.apply(docs=docs, lfs=[[gold]], table=GoldLabel, train=True, parallelism=PARALLEL)')
+get_ipython().run_line_magic('time', 'labeler.apply(docs=docs, lfs=[[gold_col]], table=GoldLabel, train=True, parallelism=PARALLEL)')
+
+gold = [gold_row, gold_col]
 
 
 # ### 3.3) Training the Discriminative Model 
@@ -565,7 +567,7 @@ def train_model(cands, F, align_type, model_type="LogisticRegression"):
     align_val = 0 if align_type == "row" else 1
     train_cands = cands[align_val][0]
     F_train = F[align_val][0]
-    train_marginals = np.array([[1,0] if gold(x) else [0,1] for x in train_cands[0]])
+    train_marginals = np.array([[0,1] if gold[align_val](x) else [1,0] for x in train_cands[0]])
     
     # 1.) Setup training config
     config = {
@@ -652,6 +654,8 @@ def eval_model(model, emb_layer, cands, F, align_type = "row"):
     F_train = F[align_val][0]
     F_dev = F[align_val][1]
     F_test = F[align_val][2]
+    row_on = True if align_type == "row" else False
+    col_on = True if align_type == "col" else False
     
     # Generate dataloader for test data
     test_dataloader = EmmentalDataLoader(
@@ -667,7 +671,7 @@ def eval_model(model, emb_layer, cands, F, align_type = "row"):
     test_preds = model.predict(test_dataloader, return_preds=True)
     positive = np.where(np.array(test_preds["probs"][ATTRIBUTE])[:, TRUE] > 0.6)
     true_pred = [test_cands[0][_] for _ in positive[0]]
-    test_results = entity_level_f1(true_pred, gold_file, ATTRIBUTE, test_docs, row_on=True, col_on=False)
+    test_results = entity_level_f1(true_pred, gold_file, ATTRIBUTE, test_docs, row_on=row_on, col_on=col_on)
     
     # Run on dev and train set for validation
     # We run the predictions also on our training and dev set, to validate that everything seems to work smoothly
@@ -687,7 +691,7 @@ def eval_model(model, emb_layer, cands, F, align_type = "row"):
     dev_preds = model.predict(dev_dataloader, return_preds=True)
     positive_dev = np.where(np.array(dev_preds["probs"][ATTRIBUTE])[:, TRUE] > 0.6)
     true_dev_pred = [dev_cands[0][_] for _ in positive_dev[0]]
-    dev_results = entity_level_f1(true_dev_pred, gold_file, ATTRIBUTE, dev_docs, row_on=True, col_on=False)
+    dev_results = entity_level_f1(true_dev_pred, gold_file, ATTRIBUTE, dev_docs, row_on=row_on, col_on=col_on)
     
     # Generate dataloader for train data
     train_dataloader = EmmentalDataLoader(
@@ -704,7 +708,7 @@ def eval_model(model, emb_layer, cands, F, align_type = "row"):
     train_preds = model.predict(train_dataloader, return_preds=True)
     positive_train = np.where(np.array(train_preds["probs"][ATTRIBUTE])[:, TRUE] > 0.6)
     true_train_pred = [train_cands[0][_] for _ in positive_train[0]]
-    train_results = entity_level_f1(true_train_pred, gold_file, ATTRIBUTE, train_docs, row_on=True, col_on=False)
+    train_results = entity_level_f1(true_train_pred, gold_file, ATTRIBUTE, train_docs, row_on=row_on, col_on=col_on)
         
     return [train_results, dev_results, test_results]
 
