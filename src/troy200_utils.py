@@ -406,3 +406,62 @@ class Counter:
 
     def __iter__(self, sentinal=False):
         return iter(self.increment, sentinal)   
+
+def summarize_results(results):
+    row_results_train = results[0][0]
+    row_results_dev = results[0][1]
+    row_results_test = results[0][2]
+    col_results_train = results[1][0]
+    col_results_dev = results[1][1]
+    col_results_test = results[1][2]
+    
+    prec_test = (
+        len(row_results_test[0]) + 
+        len(col_results_test[0])
+    ) / (
+        len(row_results_test[0]) + 
+        len(col_results_test[0]) +
+        len(row_results_test[1]) + 
+        len(col_results_test[1])
+    )
+
+    rec_test = (
+        len(row_results_test[0]) + 
+        len(col_results_test[0])
+    ) / (
+        len(row_results_test[0]) + 
+        len(col_results_test[0]) +
+        len(row_results_test[2]) + 
+        len(col_results_test[2])
+    )
+    f1_test = 2 * (prec_test * rec_test) / (prec_test + rec_test)
+
+    pos_total = (
+        len(row_results_train[0]) + 
+        len(col_results_train[0]) + 
+        len(row_results_dev[0]) + 
+        len(col_results_dev[0]) + 
+        len(row_results_test[0]) + 
+        len(col_results_test[0])
+    )
+    prec_total = pos_total / (
+        pos_total + 
+        len(row_results_train[1]) + 
+        len(col_results_train[1]) + 
+        len(row_results_dev[1]) + 
+        len(col_results_dev[1]) + 
+        len(row_results_test[1]) + 
+        len(col_results_test[1])
+    )
+    rec_total = pos_total / (
+        pos_total + 
+        len(row_results_train[2]) + 
+        len(col_results_train[2]) + 
+        len(row_results_dev[2]) + 
+        len(col_results_dev[2]) + 
+        len(row_results_test[2]) + 
+        len(col_results_test[2])
+    )
+    f1_total = 2 * (prec_total * rec_total) / (prec_total + rec_total)
+    
+    return (prec_test, rec_test, f1_test, prec_total, rec_total, f1_total)
